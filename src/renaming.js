@@ -75,7 +75,7 @@ async function shouldAbortDueToClash([origin, clash], oldTag, newTag) {
     return !await new Confirm()
         .setTitle("WARNING: No Undo!")
         .setContent(
-            activeWindow.createEl("p", undefined, el => { el.innerHTML =
+            activeWindow.createEl("p", undefined, el => { el["innerHTML"] =
                 `Renaming <code>${oldTag}</code> to <code>${newTag}</code> will merge ${
                     (origin.canonical === oldTag.canonical) ?
                         `these tags` : `multiple tags

@@ -2,9 +2,10 @@ import {Component, Keymap, Menu, Notice, parseFrontMatterAliases, Plugin} from "
 import {renameTag, findTargets} from "./renaming";
 import {Tag} from "./Tag";
 import {around} from "monkey-around";
-import {Confirm, use} from "@ophidian/core";
+import {Confirm, use, app} from "@ophidian/core";
 
 const tagHoverMain = "tag-wrangler:tag-pane";
+const {document} = globalThis;
 
 function onElement(el, event, selector, callback, options) {
     el.on(event, selector, callback, options)
@@ -163,7 +164,7 @@ export default class TagWrangler extends Plugin {
 
         // Track Tag Pages
         const metaCache = this.app.metadataCache;
-        const plugin = this;
+        const plugin = (() => this)();
 
         this.register(around(metaCache, {
             getTags(old) {
@@ -185,7 +186,7 @@ export default class TagWrangler extends Plugin {
                     this.app.vault.getAbstractFileByPath(filename), fm
                 );
             });
-            this.registerEvent(metaCache.on("changed", (file, data, cache) => this.updatePage(file, cache?.frontmatter)));
+            this.registerEvent(metaCache.on("changed", (file, _data, cache) => this.updatePage(file, cache?.frontmatter)));
             this.registerEvent(this.app.vault.on("delete", file => this.updatePage(file)));
             app.workspace.getLeavesOfType("tag").forEach(leaf => {leaf?.view?.requestUpdateTags?.()});
         });
@@ -231,7 +232,7 @@ export default class TagWrangler extends Plugin {
             const
                 tagParent = tagName.split("/").slice(0, -1).join("/"),
                 tagView = this.leafView(tagEl.matchParent(".workspace-leaf")),
-                tagContainer = tagParent ? tagView.tagDoms["#" + tagParent.toLowerCase()]: tagView.root
+                tagContainer = tagParent ? tagView.tagDoms["#" + tagParent.toLowerCase()]: tagView.root ?? tagView.tree.root
             ;
             function toggle(collapse) {
                 for(const tag of tagContainer.children ?? tagContainer.vChildren.children) tag.setCollapsed(collapse);
@@ -331,7 +332,7 @@ class TagPageUIHandler extends Component {
             }, {capture: false})
         );
 
-        const self = this;
+        const self = (() => this)();
 
         if (hoverSource === "preview") {
             this.register(
