@@ -2,7 +2,7 @@
 > NEW in 0.6.0
 > - Open or create a tag page by alt/opt clicking a tag in any note (or the tags view)
 > - Use the Tag Wrangler context menu for tags in the body of a note (editor or preview mode)
-> - Drag-and-drop tags to rename/reorganize them
+> - Drag-and-drop tags to rename/reorganize them.
 > - Drag tags from the tags view or a note preview to an editor pane to insert them as texts.
 
 This plugin adds a context menu for tags in the [Obsidian.md](https://obsidian.md) tags view, with the following actions available:
