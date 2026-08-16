@@ -3,6 +3,8 @@ import {renameTag, findTargets} from "./renaming";
 import {Tag} from "./Tag";
 import {around} from "monkey-around";
 import {Confirm, use, app} from "@ophidian/core";
+import {TagSelectionManager} from "./tag-selection";
+import {OperationJournal} from "./journal";
 
 const tagHoverMain = "tag-wrangler:tag-pane";
 const {document} = globalThis;
@@ -16,6 +18,8 @@ export default class TagWrangler extends Plugin {
     use = use.plugin(this);
     pageAliases = new Map();
     tagPages = new Map();
+    tagSelection = new TagSelectionManager(this);
+    operationJournal = new OperationJournal(this);
 
     tagPage(tag) {
         return Array.from(this.tagPages.get(Tag.canonical(tag)) || "")[0]
@@ -140,8 +144,14 @@ export default class TagWrangler extends Plugin {
         const dropHandler = (e, targetEl, info = app.dragManager.draggable, drop) => {
             if (info?.source !== "tag-wrangler" || e.defaultPrevented ) return;
             const tag = targetEl.find(".tag-pane-tag-text, tag-pane-tag-text, .tag-pane-tag .tree-item-inner-text")?.textContent;
-            const dest = tag+"/"+Tag.toName(info.title).split("/").pop();
-            if (Tag.canonical(tag) === Tag.canonical(info.title)) return;
+            const sourceName = Tag.toName(info.title);
+            const targetName = Tag.toName(tag);
+            if (!tag || !sourceName || Tag.canonical(tag) === Tag.canonical(info.title)) return;
+            // Never allow a branch to be dropped into itself or one of its descendants.
+            const sourceCanonical = Tag.canonical(sourceName);
+            const targetCanonical = Tag.canonical(targetName);
+            if (targetCanonical.startsWith(sourceCanonical + "/")) return;
+            const dest = targetName + "/" + sourceName.split("/").pop();
             e.dataTransfer.dropEffect = "move";
             e.preventDefault();
             if (drop) {
@@ -161,6 +171,10 @@ export default class TagWrangler extends Plugin {
             const info = app.dragManager.draggable;
             if (info && !e.defaultPrevented) dropHandler(e, targetEl, info, true);
         }, {capture: true});
+
+        this.tagSelection.start();
+        this.addCommand({id: "tag-wrangler-operation-journal", name: "Open bulk operation journal", callback: () => this.operationJournal.openHistory()});
+        this.addCommand({id: "tag-wrangler-undo-last-bulk-operation", name: "Undo last bulk operation", callback: () => this.operationJournal.undoLast()});
 
         // Track Tag Pages
         const metaCache = this.app.metadataCache;
@@ -239,6 +253,7 @@ export default class TagWrangler extends Plugin {
             }
             menu.addItem(item("tag-hierarchy", "vertical-three-dots", "Collapse tags at this level", () => toggle(true )))
                 .addItem(item("tag-hierarchy", "expand-vertically"  , "Expand tags at this level"  , () => toggle(false)))
+                .addItem(item("tag-hierarchy", "checkmark", "Select this branch", () => this.tagSelection.selectBranch(tagName)))
         }
     }
 
@@ -301,6 +316,14 @@ export default class TagWrangler extends Plugin {
     async rename(tagName, toName=tagName) {
         try { await renameTag(this.app, tagName, toName); }
         catch (e) { console.error(e); new Notice("error: " + e); }
+    }
+
+    async confirmAction(title, message) {
+        return await new Confirm()
+            .setTitle(title)
+            .setContent(message)
+            .setup(c => c.okButton.addClass("mod-warning"))
+            .confirm();
     }
 
 }

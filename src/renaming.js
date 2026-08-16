@@ -6,36 +6,30 @@ import {File} from "./File";
 
 export async function renameTag(app, tagName, toName=tagName) {
     const newName = await promptForNewName(tagName, toName);
-    if (newName === false) return;  // aborted
+    if (newName === false) return;
+    if (!newName || newName === tagName) return new Notice("Unchanged or empty tag: No changes made.");
+    return renameTagDirect(app, tagName, newName);
+}
 
-    if (!newName || newName === tagName) {
-        return new Notice("Unchanged or empty tag: No changes made.");
+export async function renameTagDirect(app, tagName, newName, externalProgress) {
+    const oldTag = new Tag(tagName);
+    const newTag = new Tag(newName);
+    const replace = new Replacement(oldTag, newTag);
+    const clashing = replace.willMergeTags(allTags(app).reverse());
+    if (clashing && !externalProgress) {
+        const shouldAbort = await shouldAbortDueToClash(clashing, oldTag, newTag);
+        if (shouldAbort) return 0;
     }
-
-    const
-        oldTag  = new Tag(tagName),
-        newTag  = new Tag(newName),
-        replace = new Replacement(oldTag, newTag),
-        clashing = replace.willMergeTags(
-            allTags(app).reverse()   // find longest clash first
-        ),
-        shouldAbort = clashing &&
-            await shouldAbortDueToClash(clashing, oldTag, newTag)
-        ;
-
-    if (shouldAbort) return;
-
     const targets = await findTargets(app, oldTag);
-    if (!targets) return;
-
-    const progress = new Progress(`Renaming to #${newName}/*`, "Processing files...");
+    if (!targets) return 0;
+    const progress = externalProgress || new Progress(`Renaming to #${newName}/*`, "Processing files...");
     let renamed = 0;
-    await progress.forEach(targets, async (target) => {
+    await progress.forEach(targets, async target => {
         progress.message = "Processing " + target.basename;
         if (await target.renamed(replace)) renamed++;
     });
-
-    return new Notice(`Operation ${progress.aborted ? "cancelled" : "complete"}: ${renamed} file(s) updated`);
+    if (!externalProgress) new Notice(`Operation ${progress.aborted ? "cancelled" : "complete"}: ${renamed} file(s) updated`);
+    return renamed;
 }
 
 function allTags(app) {
