@@ -1,0 +1,103 @@
+.tag-wrangler-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--size-4-1);
+    flex-wrap: wrap;
+    padding: var(--size-4-1) var(--size-4-2);
+    border-bottom: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.tag-wrangler-toolbar-actions {
+    display: flex;
+    gap: var(--size-4-1);
+    flex-wrap: wrap;
+}
+
+.tag-wrangler-toolbar-button {
+    min-height: 28px;
+}
+
+.tag-wrangler-selection-count {
+    color: var(--text-muted);
+    font-size: var(--font-ui-smaller);
+    margin-inline-start: auto;
+    white-space: nowrap;
+}
+
+.tag-pane-tag.tag-wrangler-selected {
+    background: var(--background-modifier-hover);
+}
+
+.tag-wrangler-select-toggle {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin-inline-end: var(--size-4-1);
+    padding: 0;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    background: var(--background-primary);
+    color: var(--text-accent);
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.tag-wrangler-select-toggle[aria-pressed="true"] {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.tag-wrangler-bulk-preview {
+    margin: var(--size-4-2) 0;
+    padding: var(--size-4-2);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    max-height: 240px;
+    overflow: auto;
+}
+
+.tag-wrangler-bulk-preview strong {
+    display: block;
+    margin-bottom: var(--size-4-1);
+}
+
+@media (max-width: 600px) {
+    .tag-wrangler-toolbar {
+        padding: var(--size-4-1);
+    }
+
+    .tag-wrangler-toolbar-button {
+        flex: 1 1 auto;
+    }
+}
+
+.tag-wrangler-review-summary {
+    padding: 10px 12px;
+    margin: 8px 0 12px;
+    border-radius: var(--radius-s);
+    background: var(--background-secondary);
+    font-weight: 600;
+}
+.tag-wrangler-review-file {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+.tag-wrangler-review-empty {
+    margin: 10px 0;
+    padding: 10px;
+    color: var(--text-muted);
+}
+.tag-wrangler-journal-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+.tag-wrangler-journal-entry > div {
+    color: var(--text-muted);
+    font-size: var(--font-ui-small);
+    margin-top: 3px;
+}
